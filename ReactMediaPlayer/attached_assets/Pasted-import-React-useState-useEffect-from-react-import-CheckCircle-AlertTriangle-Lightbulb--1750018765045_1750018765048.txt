@@ -1,0 +1,385 @@
+import React, { useState, useEffect } from 'react';
+import { CheckCircle, AlertTriangle, Lightbulb, Play, Settings, FileText } from 'lucide-react';
+
+const VideoPromptOptimizer = () => {
+  const [userPrompt, setUserPrompt] = useState('');
+  const [optimizedPrompt, setOptimizedPrompt] = useState('');
+  const [analysis, setAnalysis] = useState({
+    imageGeneration: { score: 0, issues: [], suggestions: [] },
+    videoGeneration: { score: 0, issues: [], suggestions: [] },
+    voiceGeneration: { score: 0, issues: [], suggestions: [] },
+    overall: { score: 0, readiness: 'Not Ready' }
+  });
+
+  const analyzePrompt = (prompt) => {
+    if (!prompt.trim()) {
+      return {
+        imageGeneration: { score: 0, issues: ['No prompt provided'], suggestions: [] },
+        videoGeneration: { score: 0, issues: ['No prompt provided'], suggestions: [] },
+        voiceGeneration: { score: 0, issues: ['No prompt provided'], suggestions: [] },
+        overall: { score: 0, readiness: 'Not Ready' }
+      };
+    }
+
+    const analysis = {
+      imageGeneration: analyzeForImages(prompt),
+      videoGeneration: analyzeForVideo(prompt),
+      voiceGeneration: analyzeForVoice(prompt),
+    };
+
+    const avgScore = (analysis.imageGeneration.score + analysis.videoGeneration.score + analysis.voiceGeneration.score) / 3;
+    analysis.overall = {
+      score: Math.round(avgScore),
+      readiness: avgScore >= 80 ? 'Production Ready' : avgScore >= 60 ? 'Good' : avgScore >= 40 ? 'Needs Work' : 'Poor'
+    };
+
+    return analysis;
+  };
+
+  const analyzeForImages = (prompt) => {
+    let score = 50;
+    const issues = [];
+    const suggestions = [];
+
+    // Visual descriptors
+    const visualWords = ['scene', 'visual', 'show', 'image', 'picture', 'illustration', 'diagram', 'chart'];
+    if (visualWords.some(word => prompt.toLowerCase().includes(word))) {
+      score += 15;
+    } else {
+      issues.push('Lacks visual descriptors');
+      suggestions.push('Add words like "show", "illustrate", or "visualize"');
+    }
+
+    // Specific imagery
+    const specificImagery = ['detailed', 'realistic', 'professional', 'clean', 'modern'];
+    if (specificImagery.some(word => prompt.toLowerCase().includes(word))) {
+      score += 10;
+    } else {
+      suggestions.push('Add style descriptors like "professional" or "clean"');
+    }
+
+    // Educational context
+    if (prompt.toLowerCase().includes('educational') || prompt.toLowerCase().includes('learning')) {
+      score += 15;
+    } else {
+      suggestions.push('Specify educational context for better image generation');
+    }
+
+    // Avoid problematic elements
+    const problematic = ['text', 'words', 'writing', 'letters'];
+    if (problematic.some(word => prompt.toLowerCase().includes(word))) {
+      issues.push('References text/writing (AI image generators struggle with text)');
+      score -= 20;
+    }
+
+    return { score: Math.min(100, Math.max(0, score)), issues, suggestions };
+  };
+
+  const analyzeForVideo = (prompt) => {
+    let score = 50;
+    const issues = [];
+    const suggestions = [];
+
+    // Motion/action words
+    const motionWords = ['movement', 'animation', 'transition', 'flow', 'dynamic', 'moving'];
+    if (motionWords.some(word => prompt.toLowerCase().includes(word))) {
+      score += 20;
+    } else {
+      suggestions.push('Add motion descriptors like "smooth transition" or "dynamic movement"');
+    }
+
+    // Scene structure
+    if (prompt.toLowerCase().includes('scene') || prompt.toLowerCase().includes('sequence')) {
+      score += 15;
+    } else {
+      suggestions.push('Structure content into clear scenes or sequences');
+    }
+
+    // Duration awareness
+    if (prompt.toLowerCase().includes('brief') || prompt.toLowerCase().includes('quick') || prompt.toLowerCase().includes('short')) {
+      score += 10;
+    } else {
+      suggestions.push('Consider specifying duration expectations (Luma generates ~4-5 second clips)');
+    }
+
+    // Complex scenarios
+    const complex = ['multiple people', 'crowd', 'complex interaction', 'detailed facial expressions'];
+    if (complex.some(phrase => prompt.toLowerCase().includes(phrase))) {
+      issues.push('May contain complex elements challenging for AI video generation');
+      score -= 15;
+    }
+
+    return { score: Math.min(100, Math.max(0, score)), issues, suggestions };
+  };
+
+  const analyzeForVoice = (prompt) => {
+    let score = 50;
+    const issues = [];
+    const suggestions = [];
+
+    // Narration structure
+    if (prompt.toLowerCase().includes('explain') || prompt.toLowerCase().includes('narrat')) {
+      score += 20;
+    } else {
+      suggestions.push('Include clear narration structure with "explain" or "describe"');
+    }
+
+    // Educational tone
+    const educationalTone = ['learn', 'understand', 'discover', 'explore', 'knowledge'];
+    if (educationalTone.some(word => prompt.toLowerCase().includes(word))) {
+      score += 15;
+    } else {
+      suggestions.push('Use educational language like "learn", "understand", or "discover"');
+    }
+
+    // Script clarity
+    if (prompt.length > 200) {
+      score += 10;
+    } else if (prompt.length < 50) {
+      issues.push('Prompt may be too short for meaningful narration');
+      score -= 15;
+    }
+
+    // Pronunciation challenges
+    const difficult = ['technical jargon', 'acronyms', 'foreign words'];
+    if (difficult.some(phrase => prompt.toLowerCase().includes(phrase))) {
+      suggestions.push('Consider simplifying technical terms for better voice synthesis');
+    }
+
+    return { score: Math.min(100, Math.max(0, score)), issues, suggestions };
+  };
+
+  const generateOptimizedPrompt = (originalPrompt) => {
+    if (!originalPrompt.trim()) return '';
+
+    let optimized = originalPrompt;
+
+    // Add educational framing if missing
+    if (!optimized.toLowerCase().includes('educational')) {
+      optimized = `Educational content: ${optimized}`;
+    }
+
+    // Add visual descriptors if missing
+    const visualWords = ['show', 'visualize', 'illustrate', 'display'];
+    if (!visualWords.some(word => optimized.toLowerCase().includes(word))) {
+      optimized = optimized.replace(/\.$/, '') + '. Visualize this with clear, professional imagery.';
+    }
+
+    // Add motion context for video
+    if (!optimized.toLowerCase().includes('scene') && !optimized.toLowerCase().includes('sequence')) {
+      optimized += ' Structure as engaging scenes with smooth transitions.';
+    }
+
+    // Add narration guidance
+    if (!optimized.toLowerCase().includes('explain') && !optimized.toLowerCase().includes('narrat')) {
+      optimized += ' Include clear narration that explains key concepts.';
+    }
+
+    return optimized;
+  };
+
+  useEffect(() => {
+    const newAnalysis = analyzePrompt(userPrompt);
+    setAnalysis(newAnalysis);
+    setOptimizedPrompt(generateOptimizedPrompt(userPrompt));
+  }, [userPrompt]);
+
+  const getScoreColor = (score) => {
+    if (score >= 80) return 'text-green-600';
+    if (score >= 60) return 'text-yellow-600';
+    return 'text-red-600';
+  };
+
+  const getReadinessColor = (readiness) => {
+    if (readiness === 'Production Ready') return 'bg-green-100 text-green-800';
+    if (readiness === 'Good') return 'bg-yellow-100 text-yellow-800';
+    if (readiness === 'Needs Work') return 'bg-orange-100 text-orange-800';
+    return 'bg-red-100 text-red-800';
+  };
+
+  return (
+    <div className="max-w-6xl mx-auto p-6 bg-white">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Educational Video Prompt Optimizer</h1>
+        <p className="text-gray-600">Optimize your prompts for OpenAI + Luma + ElevenLabs + Shotstack pipeline</p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Input Section */}
+        <div className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Your Educational Video Prompt
+            </label>
+            <textarea
+              value={userPrompt}
+              onChange={(e) => setUserPrompt(e.target.value)}
+              placeholder="Describe the educational video you want to create. Include topic, visual elements, and learning objectives..."
+              className="w-full h-40 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+            />
+          </div>
+
+          {/* Overall Score */}
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-semibold text-gray-900">Overall Readiness</h3>
+              <span className={`px-3 py-1 rounded-full text-sm font-medium ${getReadinessColor(analysis.overall.readiness)}`}>
+                {analysis.overall.readiness}
+              </span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="flex-1 bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${analysis.overall.score}%` }}
+                ></div>
+              </div>
+              <span className={`font-bold ${getScoreColor(analysis.overall.score)}`}>
+                {analysis.overall.score}%
+              </span>
+            </div>
+          </div>
+
+          {/* Optimized Prompt */}
+          {optimizedPrompt && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Optimized Prompt
+              </label>
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-gray-800">{optimizedPrompt}</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Analysis Section */}
+        <div className="space-y-6">
+          {/* Component Analysis */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-900">Pipeline Analysis</h3>
+            
+            {/* Image Generation */}
+            <div className="border border-gray-200 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center space-x-2">
+                  <Settings className="h-5 w-5 text-blue-600" />
+                  <span className="font-medium">OpenAI Image Generation</span>
+                </div>
+                <span className={`font-bold ${getScoreColor(analysis.imageGeneration.score)}`}>
+                  {analysis.imageGeneration.score}%
+                </span>
+              </div>
+              
+              {analysis.imageGeneration.issues.length > 0 && (
+                <div className="mb-2">
+                  {analysis.imageGeneration.issues.map((issue, idx) => (
+                    <div key={idx} className="flex items-start space-x-2 text-sm text-red-600 mb-1">
+                      <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      <span>{issue}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              {analysis.imageGeneration.suggestions.length > 0 && (
+                <div>
+                  {analysis.imageGeneration.suggestions.map((suggestion, idx) => (
+                    <div key={idx} className="flex items-start space-x-2 text-sm text-blue-600 mb-1">
+                      <Lightbulb className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      <span>{suggestion}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Video Generation */}
+            <div className="border border-gray-200 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center space-x-2">
+                  <Play className="h-5 w-5 text-purple-600" />
+                  <span className="font-medium">Luma Video Generation</span>
+                </div>
+                <span className={`font-bold ${getScoreColor(analysis.videoGeneration.score)}`}>
+                  {analysis.videoGeneration.score}%
+                </span>
+              </div>
+              
+              {analysis.videoGeneration.issues.length > 0 && (
+                <div className="mb-2">
+                  {analysis.videoGeneration.issues.map((issue, idx) => (
+                    <div key={idx} className="flex items-start space-x-2 text-sm text-red-600 mb-1">
+                      <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      <span>{issue}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              {analysis.videoGeneration.suggestions.length > 0 && (
+                <div>
+                  {analysis.videoGeneration.suggestions.map((suggestion, idx) => (
+                    <div key={idx} className="flex items-start space-x-2 text-sm text-blue-600 mb-1">
+                      <Lightbulb className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      <span>{suggestion}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Voice Generation */}
+            <div className="border border-gray-200 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center space-x-2">
+                  <FileText className="h-5 w-5 text-green-600" />
+                  <span className="font-medium">ElevenLabs Voice Synthesis</span>
+                </div>
+                <span className={`font-bold ${getScoreColor(analysis.voiceGeneration.score)}`}>
+                  {analysis.voiceGeneration.score}%
+                </span>
+              </div>
+              
+              {analysis.voiceGeneration.issues.length > 0 && (
+                <div className="mb-2">
+                  {analysis.voiceGeneration.issues.map((issue, idx) => (
+                    <div key={idx} className="flex items-start space-x-2 text-sm text-red-600 mb-1">
+                      <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      <span>{issue}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              {analysis.voiceGeneration.suggestions.length > 0 && (
+                <div>
+                  {analysis.voiceGeneration.suggestions.map((suggestion, idx) => (
+                    <div key={idx} className="flex items-start space-x-2 text-sm text-blue-600 mb-1">
+                      <Lightbulb className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      <span>{suggestion}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Quick Tips */}
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <h4 className="font-semibold text-yellow-800 mb-2">Pipeline Best Practices</h4>
+            <ul className="text-sm text-yellow-700 space-y-1">
+              <li>• Structure content into 4-5 second scenes for Luma</li>
+              <li>• Use descriptive visual language for better images</li>
+              <li>• Avoid requesting text/writing in visuals</li>
+              <li>• Include clear educational objectives</li>
+              <li>• Keep narration conversational and clear</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default VideoPromptOptimizer;

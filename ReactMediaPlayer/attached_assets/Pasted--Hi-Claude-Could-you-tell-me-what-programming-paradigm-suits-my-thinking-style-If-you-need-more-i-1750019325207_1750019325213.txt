@@ -1,0 +1,53 @@
+
+Hi Claude! Could you tell me what programming paradigm suits my thinking style? If you need more information from me, ask me 1-2 key questions right away. If you think I should upload any documents that would help you do a better job, let me know. You can use the tools you have access to — like Google Drive, web search, etc. — if they’ll help you better accomplish this task. Do not use analysis tool. Please keep your responses friendly, brief and conversational. 
+
+Please execute the task as soon as you can - an artifact would be great if it makes sense. If using an artifact, consider what kind of artifact (interactive, visual, checklist, etc.) might be most helpful for this specific task. Thanks for your help!
+
+Edit
+To help match you with the best programming paradigm, I'd love to know more about how you naturally think and approach problems!
+
+Here are my key questions:
+
+Problem-solving style: When you tackle a complex problem, do you prefer to break it down into small, sequential steps, or do you like to see the big picture and work with interconnected pieces?
+Mental models: Do you think more in terms of "things and their properties" (like objects in the real world) or "actions and transformations" (like recipes or processes)?
+These will help me understand whether you lean toward object-oriented, functional, procedural, or other paradigms. I can create an interactive assessment afterward to give you a personalized recommendation!
+
+What's your take on these two aspects of your thinking?
+
+
+
+
+
+eLearning_video_generation_workflow.json
+527 lines
+
+json
+
+maybe you will tell me after our conversation now. for the moment, i would like us to work on a project. so in the attached json script, you will find a workflow which aims to generate quality educational videos in hd. I would like you to build an artifact that will help uptimaze the users prompt to best provide quality videos that aligns with the tools that would be used to generate the video.
+
+Edit
+Looking at your workflow, I can see you've built a sophisticated video generation pipeline that combines multiple AI services. Let me create an interactive prompt optimizer that helps users craft inputs that work best with your specific toolchain.
+
+
+Educational Video Prompt Optimizer
+Interactive artifact 
+Perfect! I've created an interactive prompt optimizer specifically tailored to your video generation workflow. The tool analyzes prompts against each component of your pipeline:
+
+Key Features:
+
+Real-time analysis for OpenAI image generation, Luma video creation, and ElevenLabs voice synthesis
+Specific feedback based on each API's strengths and limitations
+Automated optimization that restructures prompts for better results
+Pipeline-aware scoring that considers your 4-second scene structure
+Why this helps your workflow:
+
+Catches common issues like requesting text in images (which AI struggles with)
+Suggests motion descriptors that work well with Luma's capabilities
+Ensures narration structure aligns with ElevenLabs' voice synthesis
+Considers the scene-splitting approach your workflow uses
+Try pasting in some educational video ideas and watch it optimize them for your specific toolchain! The tool will help users get much better results from your sophisticated pipeline.
+
+
+
+
+if users interact with this artifact, where do there data go. and who have access to it, what is the security and privacy concerns
